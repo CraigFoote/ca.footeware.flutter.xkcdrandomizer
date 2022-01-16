@@ -27,14 +27,12 @@ class HomePageState extends State<HomePage> {
   bool switchValue = false;
   late String _url;
   late bool _haveUrl;
-  late bool _haveRequest;
 
   @override
   void initState() {
     super.initState();
     _loadPrefs();
     _haveUrl = false;
-    _haveRequest = false;
   }
 
   Future<PermissionStatus> get permission async {
@@ -59,25 +57,22 @@ class HomePageState extends State<HomePage> {
     );
   }
 
-  void _getComic() async {
-    setState(() => _haveRequest = true);
-    var url = Uri(scheme: 'https', host: 'random-xkcd-img.herokuapp.com');
+  Future<String> _getComicUrl() async {
+    String _comicUrl = '';
+    var lookupUrl = Uri(scheme: 'https', host: 'random-xkcd-img.herokuapp.com');
     final client = HttpClient();
     client.badCertificateCallback =
         (X509Certificate cert, String host, int port) => true;
     final http = IOClient(client);
-    await http.get(url).then(
-      (response) async {
-        if (response.statusCode == 200) {
-          Map<String, dynamic> result = json.decode(response.body);
-          _url = result['url'];
-          setState(() {
-            _haveUrl = true;
-            _haveRequest = false;
-          });
-        }
-      },
-    );
+    await http.get(lookupUrl).then((response) async {
+      if (response.statusCode == 200) {
+        Map<String, dynamic> result = json.decode(response.body);
+        _comicUrl = result['url'];
+      } else {
+        throw Exception(response.statusCode);
+      }
+    }, onError: (e) => throw Exception(e));
+    return _comicUrl;
   }
 
   Future<void> share(String url) async {
@@ -136,7 +131,11 @@ class HomePageState extends State<HomePage> {
           label: const Text(
             'Next',
           ),
-          onPressed: () => _getComic(),
+          onPressed: () => setState(
+            () {
+              _getComicUrl();
+            },
+          ),
           icon: const Icon(
             Icons.arrow_forward_rounded,
           ),
@@ -214,28 +213,27 @@ class HomePageState extends State<HomePage> {
     );
   }
 
-  buildBody() {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      child: Center(
-        child: _haveRequest
-            ? const CircularProgressIndicator()
-            : _haveUrl
-                ? PhotoView(
-                    imageProvider: NetworkImage(
-                      _url,
-                    ),
-                    backgroundDecoration: const BoxDecoration(
-                      color: Colors.transparent,
-                    ),
-                  )
-                : const Text(
-                    'XKCD',
-                    style: TextStyle(
-                      fontSize: 32,
-                    ),
-                  ),
-      ),
+  Widget buildBody() {
+    return FutureBuilder(
+      future: _getComicUrl(),
+      builder: (_, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        } else {
+          _url = snapshot.data as String;
+          _haveUrl = true;
+          return PhotoView(
+            imageProvider: NetworkImage(
+              _url,
+            ),
+            backgroundDecoration: const BoxDecoration(
+              color: Colors.transparent,
+            ),
+          );
+        }
+      },
     );
   }
 }
