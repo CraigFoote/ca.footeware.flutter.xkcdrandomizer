@@ -25,6 +25,7 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage> {
   bool switchValue = false;
+  bool _isDarkTheme = CustomTheme.currentTheme == CustomTheme.darkTheme;
   late String _url;
   late bool _haveUrl;
 
@@ -51,9 +52,9 @@ class HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: buildAppbar(),
-      drawer: buildDrawer(),
-      body: buildBody(),
+      appBar: _buildAppbar(),
+      drawer: _buildDrawer(),
+      body: _buildBody(),
     );
   }
 
@@ -75,7 +76,7 @@ class HomePageState extends State<HomePage> {
     return _comicUrl;
   }
 
-  Future<void> share(String url) async {
+  Future<void> _share(String url) async {
     if (Platform.isAndroid) {
       if (await permission.isGranted) {
         var uri = Uri.parse(url);
@@ -107,7 +108,7 @@ class HomePageState extends State<HomePage> {
     }
   }
 
-  buildAppbar() {
+  _buildAppbar() {
     return AppBar(
       title: const Text(
         'XKCD Randomizer',
@@ -125,9 +126,6 @@ class HomePageState extends State<HomePage> {
       ),
       actions: [
         OutlinedButton.icon(
-          style: ButtonStyle(
-            foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
-          ),
           label: const Text(
             'Next',
           ),
@@ -141,13 +139,10 @@ class HomePageState extends State<HomePage> {
           ),
         ),
         OutlinedButton.icon(
-          style: ButtonStyle(
-            foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
-          ),
           label: const Text(
             'Share',
           ),
-          onPressed: () => _haveUrl ? share(_url) : null,
+          onPressed: () => _haveUrl ? _share(_url) : null,
           icon: const Icon(
             Icons.share,
           ),
@@ -156,56 +151,66 @@ class HomePageState extends State<HomePage> {
     );
   }
 
-  buildDrawer() {
+  Widget _buildDrawer() {
     return Drawer(
       child: Padding(
-        padding: const EdgeInsets.all(10.0),
+        padding: const EdgeInsets.all(
+          10.0,
+        ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                const Text('Dark Theme'),
+                const Text(
+                  'Dark Theme',
+                ),
                 Switch(
-                  value: switchValue,
+                  value: _isDarkTheme,
                   onChanged: (value) async {
                     final prefs = await SharedPreferences.getInstance();
-                    setState(() {
-                      switchValue = value;
-                      prefs.setBool('darkTheme', switchValue);
-                      widget.themeCallback(value
-                          ? CustomTheme.darkTheme
-                          : CustomTheme.lightTheme);
-                    });
+                    setState(
+                          () {
+                        _isDarkTheme = value;
+                        prefs.setBool(
+                          'isDarkTheme',
+                          _isDarkTheme,
+                        );
+                        widget.themeCallback(value
+                            ? CustomTheme.darkTheme
+                            : CustomTheme.lightTheme);
+                      },
+                    );
                   },
                 ),
               ],
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: GestureDetector(
-                    child: Builder(
-                      builder: (_) => const Icon(
-                        Icons.info,
-                      ),
-                    ),
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) {
-                            return const InfoPage(
-                              title: 'Info',
-                            );
-                          },
-                        ),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) {
+                      return const InfoPage(
+                        title: 'Info',
                       );
                     },
                   ),
+                );
+              },
+              icon: const Icon(
+                Icons.info,
+              ),
+              label: Text(
+                'Info',
+                style: _isDarkTheme
+                    ? const TextStyle(
+                  color: Color(0xffd8dee9),
+                )
+                    : const TextStyle(
+                  color: Color(0xff4c566a),
                 ),
-              ],
+              ),
             ),
           ],
         ),
@@ -213,7 +218,7 @@ class HomePageState extends State<HomePage> {
     );
   }
 
-  Widget buildBody() {
+  Widget _buildBody() {
     return FutureBuilder(
       future: _getComicUrl(),
       builder: (_, snapshot) {
