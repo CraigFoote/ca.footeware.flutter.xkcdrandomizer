@@ -1,32 +1,26 @@
 import 'package:flutter/material.dart';
-
-import 'custom_theme.dart';
 import 'home_page.dart';
 
 void main() {
   runApp(const XKCDRandomizerApp());
 }
 
-class XKCDRandomizerApp extends StatefulWidget {
+class XKCDRandomizerApp extends StatelessWidget {
   const XKCDRandomizerApp({Key? key}) : super(key: key);
-  final String title = 'XKCD Randomizer';
-
-  @override
-  XKCDRandomizerAppState createState() => XKCDRandomizerAppState();
-}
-
-class XKCDRandomizerAppState extends State<XKCDRandomizerApp> {
-  void themeCallback(value) {
-    setState(() => CustomTheme.currentTheme = value);
-  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: widget.title,
-      theme: CustomTheme.currentTheme,
+      title: 'XKCD Randomizer',
+      theme: ThemeData(
+          useMaterial3: true,
+          colorSchemeSeed: const Color.fromRGBO(76, 86, 106, 1.0),
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Color.fromRGBO(46, 52, 64, 1.0),
+            foregroundColor: Color.fromRGBO(216, 222, 233, 1.0),
+          )),
       debugShowCheckedModeBanner: false,
-      home: HomePage(themeCallback),
+      home: const HomePage(),
     );
   }
 }
