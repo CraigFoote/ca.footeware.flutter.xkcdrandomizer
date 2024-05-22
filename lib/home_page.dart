@@ -66,7 +66,7 @@ class HomePageState extends State<HomePage> {
             );
           },
           icon: const Icon(
-            Icons.share,
+            Icons.info,
           ),
         )
       ],

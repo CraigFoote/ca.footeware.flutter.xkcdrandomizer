@@ -9,6 +9,7 @@ import 'package:http/io_client.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:gesture_zoom_box/gesture_zoom_box.dart';
 
 class ComicPage extends StatefulWidget {
   const ComicPage(this._comicNumber, {Key? key}) : super(key: key);
@@ -28,23 +29,28 @@ class ComicPageState extends State<ComicPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppbar(),
-      body: Center(
-        child: FutureBuilder<Uri>(
-            future: _getImageUrl(widget._comicNumber),
-            builder: (BuildContext context, AsyncSnapshot<Uri> snapshot) {
-              if (!snapshot.hasData) {
-                // while data is loading:
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              } else {
-                // data loaded:
-                final url = snapshot.data.toString();
-                return Image.network(url);
-              }
-            }),
-      ),
       backgroundColor: const Color.fromRGBO(76, 86, 106, 1.0),
+      body: GestureZoomBox(
+        child: Center(
+          child: FutureBuilder<Uri>(
+              future: _getImageUrl(widget._comicNumber),
+              builder: (BuildContext context, AsyncSnapshot<Uri> snapshot) {
+                if (!snapshot.hasData) {
+                  // while data is loading:
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                } else {
+                  // data loaded:
+                  final url = snapshot.data.toString();
+                  return Image.network(
+                    url,
+                    fit: BoxFit.contain,
+                  );
+                }
+              }),
+        ),
+      ),
     );
   }
 
@@ -78,8 +84,8 @@ class ComicPageState extends State<ComicPage> {
             'Randomize!',
           ),
           onPressed: () => setState(() {
-                  _showComic(Random().nextInt(widget._comicNumber + 1));
-                }),
+            _showComic(Random().nextInt(widget._comicNumber + 1));
+          }),
         ),
         OutlinedButton.icon(
           label: const Text(
